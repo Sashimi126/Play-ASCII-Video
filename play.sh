@@ -1,13 +1,6 @@
 #!/bin/bash
 
-# ================= 參數設定（請修改這裡） =================
-GITHUB_USER="Sashimi126"
-REPO_NAME="Play-ASCII-Video"
-BRANCH="main"
-FILE_PATH="video.mp4"
-# ========================================================
-
-VIDEO_URL="https://raw.githubusercontent.com/${GITHUB_USER}/${REPO_NAME}/${BRANCH}/${FILE_PATH}"
+VIDEO_URL="https://github.com/Sashimi126/Play-ASCII-Video/tree/main/videos"
 
 # 檢查系統套件依賴
 if ! command -v mpv &> /dev/null; then
@@ -18,5 +11,4 @@ if ! command -v mpv &> /dev/null; then
     exit 1
 fi
 
-echo "[*] 正在連線至 GitHub 串流播放 ASCII 影片與音訊..."
 mpv --vo=caca --quiet "$VIDEO_URL"
