@@ -1,6 +1,6 @@
 #!/bin/bash
 
-VIDEO_URL="https://github.com/Sashimi126/Play-ASCII-Video/tree/main/videos/gugugaga_1.mp4"
+VIDEO_URL="https://raw.githubusercontent.com/Sashimi126/Play-ASCII-Video/main/videos/gugugaga_1.mp4"
 
 # 檢查系統套件依賴
 if ! command -v mpv &> /dev/null; then
