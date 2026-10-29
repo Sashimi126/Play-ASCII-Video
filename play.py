@@ -1,7 +1,7 @@
 import os
 import platform
+import shutil
 import subprocess
-import sys
 import urllib.request
 
 VIDEO_URL = "https://raw.githubusercontent.com/Sashimi126/Play-ASCII-Video/main/videos/gugugaga_1.mp4"
@@ -12,21 +12,27 @@ def is_termux():
     return os.path.exists("/data/data/com.termux")
 
 
+def is_installed(cmd):
+    # 使用 Python 原生 shutil.which 檢查指令是否存在
+    return shutil.which(cmd) is not None
+
+
 def install_dependencies():
     if is_termux():
-        # Termux 環境
-        if subprocess.run(["command", "-v", "mpv"], capture_output=True).returncode != 0:
+        if not is_installed("mpv"):
             subprocess.run(["pkg", "update", "-y"])
-            subprocess.run(["pkg", "install", "-y", "mpv", "libcaca", "pulseaudio"])
+            subprocess.run(
+                ["pkg", "install", "-y", "mpv", "libcaca", "pulseaudio"]
+            )
         subprocess.run(["pulseaudio", "--start"], stderr=subprocess.DEVNULL)
     elif platform.system() == "Linux":
-        # Ubuntu / WSL
-        if subprocess.run(["which", "mplayer"], capture_output=True).returncode != 0:
+        if not is_installed("mplayer") and not is_installed("mpv"):
             subprocess.run(["sudo", "apt", "update"])
-            subprocess.run(["sudo", "apt", "install", "-y", "mplayer", "caca-utils"])
+            subprocess.run(
+                ["sudo", "apt", "install", "-y", "mplayer", "caca-utils"]
+            )
     elif platform.system() == "Darwin":
-        # macOS
-        if subprocess.run(["which", "mplayer"], capture_output=True).returncode != 0:
+        if not is_installed("mplayer") and not is_installed("mpv"):
             subprocess.run(["brew", "install", "mplayer"])
 
 
@@ -42,17 +48,18 @@ def main():
     if is_termux():
         os.environ["CACA_DRIVER"] = "ncurses"
         subprocess.run(["mpv", "--vo=caca", "--vid=1", "--quiet", TEMP_FILE])
-    else:
+    elif is_installed("mplayer"):
         subprocess.run(
             ["mplayer", "-vo", "caca", "-loop", "1", "-really-quiet", TEMP_FILE]
         )
+    elif is_installed("mpv"):
+        subprocess.run(["mpv", "--vo=caca", "--vid=1", "--quiet", TEMP_FILE])
 
 
 if __name__ == "__main__":
     try:
         main()
     finally:
-        # 相當於 bash 的 trap 效果，保證離開時清理暫存檔
         if os.path.exists(TEMP_FILE):
             os.remove(TEMP_FILE)
         print("[*] 播放完成！")
