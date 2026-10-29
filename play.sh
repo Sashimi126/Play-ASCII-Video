@@ -14,17 +14,14 @@ fi
 
 # 2. 自動偵測環境與安裝套件
 if $IS_TERMUX; then
-    echo "[*] 偵測到 Termux 環境，自動安裝 mpv、libcaca 與 pulseaudio..."
     pkg update -y && pkg install -y mpv libcaca pulseaudio curl
     pulseaudio --start --exit-idle-time=-1 2>/dev/null
 elif command -v brew &> /dev/null; then
     if ! command -v mplayer &> /dev/null && ! command -v mpv &> /dev/null; then
-        echo "[*] 偵測到 macOS，安裝 mplayer..."
         brew install mplayer
     fi
 elif command -v apt &> /dev/null; then
     if ! command -v mplayer &> /dev/null; then
-        echo "[*] 偵測到 Ubuntu/WSL，安裝 mplayer..."
         sudo apt update && sudo apt install -y mplayer caca-utils curl
     fi
 elif command -v pacman &> /dev/null; then
@@ -46,13 +43,17 @@ fi
 echo "[*] 開始播放 ASCII 影片..."
 
 if $IS_TERMUX; then
-    # 強制指定 libcaca 使用 ncurses 驅動，將畫面刷在 Termux 終端機上
     export CACA_DRIVER=ncurses
-    mpv --vo=caca "$TEMP_FILE"
+    clear
+    # 移除 --no-terminal 並加上 --vid=1 強制啟用影片軌
+    mpv --vo=caca --vid=1 --quiet "$TEMP_FILE"
 elif command -v mplayer &> /dev/null && mplayer -vo help 2>&1 | grep -q 'caca'; then
+    clear
     mplayer -vo caca -loop 1 -really-quiet "$TEMP_FILE"
 elif command -v mpv &> /dev/null && mpv --vo=help 2>&1 | grep -q 'caca'; then
-    mpv --vo=caca --quiet "$TEMP_FILE"
+    export CACA_DRIVER=ncurses
+    clear
+    mpv --vo=caca --vid=1 --quiet "$TEMP_FILE"
 elif command -v mpv &> /dev/null; then
     mpv --quiet "$TEMP_FILE"
 else
