@@ -3,7 +3,7 @@
 VIDEO_URL="https://raw.githubusercontent.com/Sashimi126/Play-ASCII-Video/main/videos/gugugaga_1.mp4"
 TEMP_FILE="temp_video_$$.mp4"
 
-# 安全清理機制：離開時自動清理暫存檔
+# 安全清理機制
 trap 'rm -f "$TEMP_FILE"' EXIT INT TERM
 
 # 1. 判斷是否為 Termux 環境
@@ -16,7 +16,6 @@ fi
 if $IS_TERMUX; then
     echo "[*] 偵測到 Termux 環境，自動安裝 mpv、libcaca 與 pulseaudio..."
     pkg update -y && pkg install -y mpv libcaca pulseaudio curl
-    # 啟動 Termux 背景音訊服務
     pulseaudio --start --exit-idle-time=-1 2>/dev/null
 elif command -v brew &> /dev/null; then
     if ! command -v mplayer &> /dev/null && ! command -v mpv &> /dev/null; then
@@ -47,11 +46,10 @@ fi
 echo "[*] 開始播放 ASCII 影片..."
 
 if $IS_TERMUX; then
-    # Termux: 使用 mpv + caca 模式
-    unset CACA_DRIVER
-    mpv --vo=caca --quiet "$TEMP_FILE"
+    # 強制指定 libcaca 使用 ncurses 驅動，將畫面刷在 Termux 終端機上
+    export CACA_DRIVER=ncurses
+    mpv --vo=caca "$TEMP_FILE"
 elif command -v mplayer &> /dev/null && mplayer -vo help 2>&1 | grep -q 'caca'; then
-    # Ubuntu/Debian/WSL: 使用 mplayer + caca 模式
     mplayer -vo caca -loop 1 -really-quiet "$TEMP_FILE"
 elif command -v mpv &> /dev/null && mpv --vo=help 2>&1 | grep -q 'caca'; then
     mpv --vo=caca --quiet "$TEMP_FILE"
