@@ -4,7 +4,7 @@ VIDEO_URL="https://raw.githubusercontent.com/Sashimi126/Play-ASCII-Video/main/vi
 TEMP_FILE="temp_video_$$.mp4"
 
 # 安全清理機制
-trap 'rm -f "$TEMP_FILE"; pulseaudio --kill 2>/dev/null' EXIT INT TERM
+trap 'rm -f "$TEMP_FILE"' EXIT INT TERM
 
 # 1. 自動偵測環境並安裝相依套件
 install_dependencies() {
@@ -13,8 +13,8 @@ install_dependencies() {
         
         if command -v pkg &> /dev/null; then
             # Termux (Android)
-            echo "[*] 偵測到 Termux 環境，安裝播放器與音訊套件..."
-            pkg update -y && pkg install -y mplayer libcaca curl pulseaudio
+            echo "[*] 偵測到 Termux 環境..."
+            pkg update -y && pkg install -y mplayer libcaca curl
         elif command -v brew &> /dev/null; then
             # macOS
             brew install mplayer
@@ -49,10 +49,9 @@ fi
 echo "[*] 開始播放 ASCII 影片..."
 
 if command -v pkg &> /dev/null || [ -d "/data/data/com.termux" ]; then
-    # Termux 專屬設定：啟動聲音服務並指定 ANSI 畫面驅動
-    pulseaudio --start 2>/dev/null
-    export CACA_DRIVER=ansi
-    mplayer -vo caca -ao pulse -loop 1 -really-quiet "$TEMP_FILE"
+    # Termux 專用：使用 Android 原生 opensles 音訊與 ncurses 驅動
+    export CACA_DRIVER=ncurses
+    mplayer -vo caca -ao opensles -loop 1 "$TEMP_FILE"
 elif command -v mplayer &> /dev/null && mplayer -vo help 2>&1 | grep -q 'caca'; then
     mplayer -vo caca -loop 1 -really-quiet "$TEMP_FILE"
 elif command -v mpv &> /dev/null; then
